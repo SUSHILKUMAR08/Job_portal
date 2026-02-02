@@ -1,0 +1,34 @@
+.home-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  text-align: center;
+  padding: 20px;
+  background-color: #f8fafc;
+}
+
+.home-heading {
+  font-size: 48px;
+  color: #1e293b;
+  margin-bottom: 20px;
+}
+
+.home-description {
+  font-size: 18px;
+  color: #475569;
+  max-width: 600px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.find-jobs-btn {
+  background-color: #4f46e5;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 5px;
+  font-size: 18px;
+  cursor: pointer;
+}
