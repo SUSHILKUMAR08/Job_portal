@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import Header from '../Header';
 import { FaSearch, FaMapMarkerAlt, FaBriefcase, FaBuilding } from 'react-icons/fa';
@@ -18,26 +17,17 @@ const Jobs = () => {
     try {
       const response = await fetch('https://remotive.com/api/remote-jobs?category=software-dev&limit=20');
       const data = await response.json();
-      if (data.jobs && data.jobs.length > 0) {
-        console.log("Sample job data:", {
-          company_name: data.jobs[0].company_name,
-          company_logo: data.jobs[0].company_logo,
-          logo_type: typeof data.jobs[0].company_logo
-        });
-      }
-      
       setJobsList(data.jobs.slice(0, 20));
-      setIsLoading(false);
     } catch (error) {
       console.log("Error fetching jobs", error);
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
+
   const getLogoUrl = (job) => {
-    if (job.company_logo && 
-        (job.company_logo.startsWith('http://') || 
-         job.company_logo.startsWith('https://'))) {
-      return job.company_logo;
+    if (job.company_logo) {
+      // Use a CORS-friendly proxy
+      return `https://images.weserv.nl/?url=${encodeURIComponent(job.company_logo)}&w=100&h=100&fit=cover`;
     }
     const initials = job.company_name
       ? job.company_name
@@ -50,22 +40,25 @@ const Jobs = () => {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=4f46e5&color=fff&bold=true&size=100`;
   };
 
-  const handleImageError = (e, companyName) => {
-    console.log("Image failed to load for:", companyName);
-    const initials = companyName
-      ? companyName
-          .split(' ')
-          .map(word => word.charAt(0))
-          .join('')
-          .toUpperCase()
-          .substring(0, 2)
-      : 'CO';
-    
-    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=4f46e5&color=fff&bold=true&size=100`;
-    e.target.onerror = null; 
+  const handleImageError = (e, companyName, companyLogo) => {
+    if (companyLogo && !companyLogo.includes("ui-avatars")) {
+      // Retry using proxy
+      e.target.src = `https://images.weserv.nl/?url=${encodeURIComponent(companyLogo)}&w=100&h=100&fit=cover`;
+      e.target.onerror = () => {
+        const initials = companyName
+          ? companyName
+              .split(' ')
+              .map(word => word.charAt(0))
+              .join('')
+              .toUpperCase()
+              .substring(0, 2)
+          : 'CO';
+        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=4f46e5&color=fff&bold=true&size=100`;
+      };
+    }
   };
 
-  const filteredJobs = jobsList.filter(job => 
+  const filteredJobs = jobsList.filter(job =>
     job.title.toLowerCase().includes(searchInput.toLowerCase())
   );
 
@@ -87,7 +80,7 @@ const Jobs = () => {
         {isLoading ? (
           <p style={{textAlign: 'center'}}>Loading Jobs...</p>
         ) : (
-          <div>
+          <div className="jobs-list">
             {filteredJobs.map(job => (
               <div key={job.id} className="job-card">
                 <div className="job-card-header">
@@ -96,7 +89,7 @@ const Jobs = () => {
                       src={getLogoUrl(job)}
                       alt={job.company_name} 
                       className="company-logo" 
-                      onError={(e) => handleImageError(e, job.company_name)}
+                      onError={(e) => handleImageError(e, job.company_name, job.company_logo)}
                     />
                   </div>
                   <div className="job-header-info">
